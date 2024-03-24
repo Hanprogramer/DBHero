@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://dav55ts6d2hhw"]
+
+[ext_resource type="Script" path="res://addons/DBHero/src/UI/TableContainer.cs" id="1_piori"]
+
+[node name="Table" type="VBoxContainer" node_paths=PackedStringArray("HeaderContainer", "RowContainer")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_piori")
+HeaderContainer = NodePath("PanelContainer/HeaderContainer")
+RowContainer = NodePath("PanelContainer2/ScrollContainer/ItemsContainer")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 2
+
+[node name="HeaderContainer" type="HBoxContainer" parent="PanelContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="PanelContainer2" type="PanelContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemsContainer" type="VBoxContainer" parent="PanelContainer2/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

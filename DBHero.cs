@@ -13,7 +13,12 @@ public partial class DBHero : EditorPlugin
         EditorInterface.Singleton.GetEditorMainScreen().AddChild(Editor);
         Editor.Visible = false;
 
+        AddCustomType("DBHDatabase", "Resource", GD.Load<CSharpScript>("res://addons/DBHero/src/Scripts/DBHDatabase.cs"), GD.Load<Texture2D>("res://icon.svg"));
+
         AddImportPlugin(new DBHeroImporter());
+        ResourceLoader.AddResourceFormatLoader(new DBHLoader(), true);
+        //ResourceLoader.(new DBHLoader());
+
     }
 
     public override void _ExitTree()

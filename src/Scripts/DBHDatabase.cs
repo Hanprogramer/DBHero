@@ -16,6 +16,7 @@ public enum DBHFieldType
     Resource
 }
 
+[GlobalClass]
 public partial class DBHField : GodotObject
 {
     public string FieldName { get; set; } = string.Empty;
@@ -55,6 +56,7 @@ public partial class DBHField : GodotObject
     }
 }
 
+[GlobalClass]
 public partial class DBHEntry : GodotObject
 {
     public Dictionary<DBHField, Variant> Values = new();
@@ -73,6 +75,7 @@ public partial class DBHEntry : GodotObject
     }
 }
 
+[Icon("res://icon.svg")]
 [GlobalClass]
 public partial class DBHDatabase : Resource
 {
@@ -81,10 +84,20 @@ public partial class DBHDatabase : Resource
     [Export]
     public Array<DBHEntry> Entries = new();
 
+    [Export]
     public string ClassName { get; set; }
+    [Export]
     public string DbName { get; set; }
+    [Export]
     public string NamespaceName { get; set; }
 
+    public DBHDatabase()
+    {
+        ClassName = "";
+        DbName = "db";
+        NamespaceName = "";
+        AddDefaultFields();
+    }
 
     public DBHDatabase(string className = "MyClass", string dbName = "MyDB", string namespaceName = "MyGame", bool addDefaultFields = true)
     {
@@ -129,14 +142,34 @@ public partial class DBHDatabase : Resource
         // Parse the XML
         // Get the root Db node
         XmlNode rootNode = null;
+        string className = null, dbName = null, namespaceName = null;
+        bool addDefaultFields = true;
         foreach (XmlNode c in xml.ChildNodes)
         {
             if (c.NodeType == XmlNodeType.Element && c.Name == "Db")
             {
                 rootNode = c;
+                if (c.Attributes != null)
+                    foreach (XmlAttribute a in c.Attributes)
+                    {
+                        if (a.Name == "ClassName")
+                            className = a.Value;
+                        else if (a.Name == "DBName")
+                            dbName = a.Value;
+                        else if (a.Name == "Namespace")
+                            namespaceName = a.Value;
+                        else if (a.Name == "AddDefaultFields")
+                            addDefaultFields = bool.Parse(a.Value);
+                    }
                 break;
             }
         }
+
+        ClassName = className;
+        NamespaceName = namespaceName;
+        DbName = dbName;
+        // TODO: Implement this as a field not a method
+        //AddDefaultFields = addDefaultFields;
 
         // Check if rootNode exist
         if (rootNode == null)
@@ -308,7 +341,7 @@ public partial class DBHDatabase : Resource
             strw.Append($"{e.Class},");
         }
         strw.AppendLine("];");
-        
+
         // Add each entries
         foreach (var e in Entries)
         {

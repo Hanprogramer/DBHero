@@ -1,4 +1,70 @@
-[gd_scene format=3 uid="uid://cie38fxgf20w"]
+[gd_scene load_steps=5 format=3 uid="uid://cie38fxgf20w"]
+
+[ext_resource type="Theme" uid="uid://8amkhj8hp8xd" path="res://addons/DBHero/editor_theme.tres" id="1_keegk"]
+[ext_resource type="Script" path="res://addons/DBHero/src/Scenes/StructureControl.cs" id="3_8k8x3"]
+[ext_resource type="PackedScene" uid="uid://dav55ts6d2hhw" path="res://addons/DBHero/src/UI/Table.tscn" id="3_y87eh"]
+
+[sub_resource type="GDScript" id="GDScript_02ohj"]
+resource_name = "FileList"
+script/source = "@tool
+extends ItemList
+
+@onready var files : Array = []
+@export var label : Label
+
+signal on_selected(db: String)
+
+func update_display():
+	if len(files) > 0:
+		label.hide()
+	else:
+		label.show()
+
+func _can_drop_data(at_position, data):
+	# content: { \"type\": \"files\", \"files\": [\"res://addons/DBHero/src/Scenes/DBHeroEditor.tscn\"], \"from\": @Tree@5833:<Tree#532089431794> }
+	
+	if typeof(data) != TYPE_DICTIONARY:
+		return false
+	if !data.has(\"files\"):
+		return false
+	if !(data.has(\"type\") and data[\"type\"] == \"files\"):
+		return false
+	
+	for f in data[\"files\"]:
+		var ext = f.get_extension()
+		if ext != \"dbhero\": return false
+	
+	return true
+
+func _drop_data(at_position, data):
+	for filepath in data[\"files\"]:
+		var filename: String = filepath.get_file()
+		var ext: String = filename.get_extension()
+		
+		if ext != \"dbhero\": return
+		
+		var item: int = add_item(filename)
+		files.append({
+			\"file\" : filepath,
+			\"saved\" : true,
+			\"item_id\" : item,
+			\"db\" : load(filepath)
+		})
+		
+		set_item_metadata(item, {
+			\"file\" : filepath,
+			\"saved\" : true,
+			\"item_id\" : item,
+			\"db\" : load(filepath)
+		})
+		update_display()
+
+
+
+func _on_item_selected(index):
+	var item = get_item_metadata(index)
+	emit_signal(\"on_selected\", item[\"file\"])
+"
 
 [node name="DbHeroEditor" type="Control"]
 layout_mode = 3
@@ -7,8 +73,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("1_keegk")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="HSplitContainer" type="HSplitContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,13 +85,93 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="Panel"]
+[node name="Panel" type="TabContainer" parent="HSplitContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.2
+
+[node name="Files" type="Panel" parent="HSplitContainer/Panel"]
+layout_mode = 2
+
+[node name="ItemList" type="ItemList" parent="HSplitContainer/Panel/Files" node_paths=PackedStringArray("label")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "DBHero 0.1 Alpha"
+script = SubResource("GDScript_02ohj")
+label = NodePath("../Label")
+
+[node name="Label" type="Label" parent="HSplitContainer/Panel/Files"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.333333, 0.333333, 0.333333, 1)
+text = "No files opened.
+Drag and drop a DBH database here"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="TabContainer" type="TabContainer" parent="HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Structure" type="MarginContainer" parent="HSplitContainer/TabContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer/TabContainer/Structure"]
+layout_mode = 2
+
+[node name="ToolBar" type="HBoxContainer" parent="HSplitContainer/TabContainer/Structure/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Control" type="Control" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/ToolBar"]
+custom_minimum_size = Vector2(3.405, 0)
+layout_mode = 2
+
+[node name="Button" type="Button" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/ToolBar"]
+layout_mode = 2
+text = "Add Column"
+
+[node name="PanelContainer" type="PanelContainer" parent="HSplitContainer/TabContainer/Structure/VBoxContainer" node_paths=PackedStringArray("MainTable")]
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("3_8k8x3")
+MainTable = NodePath("StructureTable")
+
+[node name="StructureTable" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/PanelContainer" instance=ExtResource("3_y87eh")]
+layout_mode = 2
+
+[node name="Entries" type="VBoxContainer" parent="HSplitContainer/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PanelContainer" type="PanelContainer" parent="HSplitContainer/TabContainer/Entries"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TabContainer/Entries/PanelContainer"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="HSplitContainer/TabContainer/Entries/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search ID, names, or anything. Search collumns by @collumn_name=\"query\""
+
+[node name="Button" type="Button" parent="HSplitContainer/TabContainer/Entries/PanelContainer/HBoxContainer"]
+layout_mode = 2
+text = "Search"
+
+[node name="Panel2" type="Panel" parent="HSplitContainer/TabContainer/Entries"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[connection signal="item_selected" from="HSplitContainer/Panel/Files/ItemList" to="HSplitContainer/Panel/Files/ItemList" method="_on_item_selected"]
+[connection signal="on_selected" from="HSplitContainer/Panel/Files/ItemList" to="HSplitContainer/TabContainer/Structure/VBoxContainer/PanelContainer" method="SetDisplay"]

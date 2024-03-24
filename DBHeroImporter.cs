@@ -6,6 +6,8 @@ using System.Text;
 [Tool]
 public partial class DBHeroImporter : EditorImportPlugin
 {
+    //public CSharpScript DBHDBScript = GD.Load<CSharpScript>("res://addons/DBHero/src/Scripts/DBHDatabase.cs");
+
     public override string _GetImporterName()
     {
         return "hanprogramer.dbhero";
@@ -56,12 +58,12 @@ public partial class DBHeroImporter : EditorImportPlugin
 
     public override int _GetPresetCount()
     {
-        return 0;
+        return 1;
     }
 
     public override string _GetPresetName(int presetIndex)
     {
-        return base._GetPresetName(presetIndex);
+        return "Default";
     }
 
     public override float _GetPriority()
@@ -78,7 +80,7 @@ public partial class DBHeroImporter : EditorImportPlugin
 
     public override string _GetResourceType()
     {
-        return "DBHeroDB";
+        return "DBHDatabase";
     }
 
     public override string _GetSaveExtension()
@@ -97,10 +99,17 @@ public partial class DBHeroImporter : EditorImportPlugin
         var classNameSpace = ((string)options["namespace"]).Trim();
         var className = (string)options["class_name"];
 
-        var res = new DBHDatabase(className, dbName, classNameSpace);
+        // TODO: add the last parameter here to the import settings
+        CSharpScript DBHDBScript = GD.Load<CSharpScript>("res://addons/DBHero/src/Scripts/DBHDatabase.cs");
+        var res = (DBHDatabase)DBHDBScript.New(className, dbName, classNameSpace, true);
+        //var res =  new DBHDatabase(className, dbName, classNameSpace);
 
         // Load the db and parse it
-        res.LoadFromXML(sourceFile);
+        if (res.LoadFromXML(sourceFile) != Error.Ok)
+        {
+            GD.PrintErr($"Error importing {sourceFile}, invalid XML.");
+            return Error.Failed;
+        }
 
         if ((bool)options["generate_class"])
         {
