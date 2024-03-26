@@ -1,8 +1,12 @@
-[gd_scene load_steps=5 format=3 uid="uid://cie38fxgf20w"]
+[gd_scene load_steps=8 format=3 uid="uid://cie38fxgf20w"]
 
-[ext_resource type="Theme" uid="uid://8amkhj8hp8xd" path="res://addons/DBHero/editor_theme.tres" id="1_keegk"]
+[ext_resource type="Script" path="res://addons/DBHero/src/Scenes/DBHeroEditor.gd" id="1_b33w5"]
 [ext_resource type="Script" path="res://addons/DBHero/src/Scenes/StructureControl.cs" id="3_8k8x3"]
 [ext_resource type="PackedScene" uid="uid://dav55ts6d2hhw" path="res://addons/DBHero/src/UI/Table.tscn" id="3_y87eh"]
+[ext_resource type="Script" path="res://addons/DBHero/src/Scenes/EntryController.cs" id="4_ligyx"]
+[ext_resource type="PackedScene" uid="uid://0dice8mpolik" path="res://addons/DBHero/src/Scenes/DBHCreateDialog.tscn" id="5_gryar"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_a2ige"]
 
 [sub_resource type="GDScript" id="GDScript_02ohj"]
 resource_name = "FileList"
@@ -14,11 +18,28 @@ extends ItemList
 
 signal on_selected(db: String)
 
+func _ready():
+	load_settings()
+
+func _exit_tree():
+	save_settings()
+
 func update_display():
 	if len(files) > 0:
 		label.hide()
 	else:
 		label.show()
+	clear()
+	for f in files:
+		var filepath = f[\"file\"]
+		var item: int = add_item(filepath.get_file())
+		set_item_metadata(item, {
+			\"file\" : filepath,
+			\"saved\" : true,
+			\"item_id\" : item,
+			\"db\" : filepath
+		})
+		f[\"item_id\"] = item
 
 func _can_drop_data(at_position, data):
 	# content: { \"type\": \"files\", \"files\": [\"res://addons/DBHero/src/Scenes/DBHeroEditor.tscn\"], \"from\": @Tree@5833:<Tree#532089431794> }
@@ -38,35 +59,54 @@ func _can_drop_data(at_position, data):
 
 func _drop_data(at_position, data):
 	for filepath in data[\"files\"]:
+		
+		# Check if the file exists first
+		var found = false
+		for f in files:
+			if f[\"file\"] == filepath:
+				found = true
+				break
+		if found: continue
+		
 		var filename: String = filepath.get_file()
 		var ext: String = filename.get_extension()
 		
 		if ext != \"dbhero\": return
 		
-		var item: int = add_item(filename)
 		files.append({
 			\"file\" : filepath,
 			\"saved\" : true,
-			\"item_id\" : item,
-			\"db\" : load(filepath)
-		})
-		
-		set_item_metadata(item, {
-			\"file\" : filepath,
-			\"saved\" : true,
-			\"item_id\" : item,
-			\"db\" : load(filepath)
+			\"item_id\" : -1,
+			\"db\" : filepath
 		})
 		update_display()
+		
 
 
 
 func _on_item_selected(index):
 	var item = get_item_metadata(index)
 	emit_signal(\"on_selected\", item[\"file\"])
+
+func save_settings():
+	var settings = EditorInterface.get_editor_settings()
+	settings.set_setting(\"dbh/open_files\", files)
+
+func load_settings():
+	var settings = EditorInterface.get_editor_settings()
+	var open_files = settings.get_setting(\"dbh/open_files\")
+	if open_files != null:
+		files = open_files
+		update_display()
+
+
+func _on_visibility_changed():
+	if item_count == 1:
+		call_deferred(\"select\", 0)
+		call_deferred(\"_on_item_selected\", 0)
 "
 
-[node name="DbHeroEditor" type="Control"]
+[node name="DbHeroEditor" type="Control" node_paths=PackedStringArray("create_dialog")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -75,7 +115,8 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = ExtResource("1_keegk")
+script = ExtResource("1_b33w5")
+create_dialog = NodePath("DBHCreateDialog")
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
 layout_mode = 1
@@ -93,18 +134,38 @@ size_flags_stretch_ratio = 0.2
 
 [node name="Files" type="Panel" parent="HSplitContainer/Panel"]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_a2ige")
 
-[node name="ItemList" type="ItemList" parent="HSplitContainer/Panel/Files" node_paths=PackedStringArray("label")]
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer/Panel/Files"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="ItemList" type="ItemList" parent="HSplitContainer/Panel/Files/VBoxContainer" node_paths=PackedStringArray("label")]
+layout_mode = 2
+size_flags_vertical = 3
+item_count = 2
+item_0/text = "Blocks.dbhero"
+item_1/text = "Items.dbhero"
 script = SubResource("GDScript_02ohj")
-label = NodePath("../Label")
+label = NodePath("../../Label")
+
+[node name="HSeparator" type="HSeparator" parent="HSplitContainer/Panel/Files/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnCreateDB" type="Button" parent="HSplitContainer/Panel/Files/VBoxContainer"]
+layout_mode = 2
+text = "Create new"
+
+[node name="BtnSaveDB" type="Button" parent="HSplitContainer/Panel/Files/VBoxContainer"]
+layout_mode = 2
+text = "Save All"
 
 [node name="Label" type="Label" parent="HSplitContainer/Panel/Files"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -121,8 +182,10 @@ autowrap_mode = 3
 [node name="TabContainer" type="TabContainer" parent="HSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+current_tab = 1
 
 [node name="Structure" type="MarginContainer" parent="HSplitContainer/TabContainer"]
+visible = false
 layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer/TabContainer/Structure"]
@@ -136,9 +199,17 @@ layout_mode = 2
 custom_minimum_size = Vector2(3.405, 0)
 layout_mode = 2
 
+[node name="BtnAdd" type="Button" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/ToolBar"]
+layout_mode = 2
+text = "Add Field"
+
+[node name="BtnRemove" type="Button" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/ToolBar"]
+layout_mode = 2
+text = "Remove Field"
+
 [node name="Button" type="Button" parent="HSplitContainer/TabContainer/Structure/VBoxContainer/ToolBar"]
 layout_mode = 2
-text = "Add Column"
+text = "Modify"
 
 [node name="PanelContainer" type="PanelContainer" parent="HSplitContainer/TabContainer/Structure/VBoxContainer" node_paths=PackedStringArray("MainTable")]
 layout_mode = 2
@@ -150,9 +221,16 @@ MainTable = NodePath("StructureTable")
 layout_mode = 2
 
 [node name="Entries" type="VBoxContainer" parent="HSplitContainer/TabContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/TabContainer/Entries"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Button" type="Button" parent="HSplitContainer/TabContainer/Entries/HBoxContainer"]
+layout_mode = 2
+text = "Add Entry"
 
 [node name="PanelContainer" type="PanelContainer" parent="HSplitContainer/TabContainer/Entries"]
 layout_mode = 2
@@ -169,9 +247,22 @@ placeholder_text = "Search ID, names, or anything. Search collumns by @collumn_n
 layout_mode = 2
 text = "Search"
 
-[node name="Panel2" type="Panel" parent="HSplitContainer/TabContainer/Entries"]
+[node name="EntryController" type="PanelContainer" parent="HSplitContainer/TabContainer/Entries" node_paths=PackedStringArray("MainTable")]
 layout_mode = 2
 size_flags_vertical = 3
+script = ExtResource("4_ligyx")
+MainTable = NodePath("Table")
 
-[connection signal="item_selected" from="HSplitContainer/Panel/Files/ItemList" to="HSplitContainer/Panel/Files/ItemList" method="_on_item_selected"]
-[connection signal="on_selected" from="HSplitContainer/Panel/Files/ItemList" to="HSplitContainer/TabContainer/Structure/VBoxContainer/PanelContainer" method="SetDisplay"]
+[node name="Table" parent="HSplitContainer/TabContainer/Entries/EntryController" instance=ExtResource("3_y87eh")]
+layout_mode = 2
+
+[node name="DBHCreateDialog" parent="." instance=ExtResource("5_gryar")]
+visible = false
+
+[connection signal="item_selected" from="HSplitContainer/Panel/Files/VBoxContainer/ItemList" to="HSplitContainer/Panel/Files/VBoxContainer/ItemList" method="_on_item_selected"]
+[connection signal="on_selected" from="HSplitContainer/Panel/Files/VBoxContainer/ItemList" to="HSplitContainer/TabContainer/Structure/VBoxContainer/PanelContainer" method="SetDisplay"]
+[connection signal="on_selected" from="HSplitContainer/Panel/Files/VBoxContainer/ItemList" to="HSplitContainer/TabContainer/Entries/EntryController" method="SetDisplay"]
+[connection signal="visibility_changed" from="HSplitContainer/Panel/Files/VBoxContainer/ItemList" to="HSplitContainer/Panel/Files/VBoxContainer/ItemList" method="_on_visibility_changed"]
+[connection signal="pressed" from="HSplitContainer/Panel/Files/VBoxContainer/BtnCreateDB" to="." method="_on_btn_create_db_pressed"]
+[connection signal="pressed" from="HSplitContainer/Panel/Files/VBoxContainer/BtnSaveDB" to="." method="_on_btn_save_db_pressed"]
+[connection signal="create" from="DBHCreateDialog" to="." method="_on_dbh_create_dialog_create"]

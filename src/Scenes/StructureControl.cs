@@ -11,6 +11,13 @@ public partial class StructureControl : PanelContainer
     public override void _Ready()
     {
         base._Ready();
+        MainTable.AddHeader("Field Name", 1.0f);
+        MainTable.AddHeader("Type");
+        MainTable.AddHeader("Default Value");
+        MainTable.AddHeader("Nullable");
+        MainTable.AddHeader("Is ID");
+        MainTable.AddHeader("Hint", 1.0f);
+        MainTable.AddHeader("Generate in C#");
     }
     public void SetDisplay(string resourcePath)
     {
@@ -18,15 +25,7 @@ public partial class StructureControl : PanelContainer
         if (db is DBHDatabase dbh)
         {
             Database = dbh;
-            MainTable.ClearHeaders();
-            MainTable.AddHeader("Field Name", 1.0f);
-            MainTable.AddHeader("Type");
-            MainTable.AddHeader("Default Value");
-            MainTable.AddHeader("Nullable");
-            MainTable.AddHeader("Is ID");
-            MainTable.AddHeader("Hint");
-            MainTable.AddHeader("Generate in C#");
-
+            MainTable.ClearRows();
             foreach (var entry in dbh.Structure)
             {
                 Array<Variant> data = [
@@ -40,6 +39,8 @@ public partial class StructureControl : PanelContainer
                 ];
                 MainTable.AddRow(data) ;
             }
+
+            MainTable.CallDeferred(TableContainer.MethodName.UpdateDisplay);
         }
         else
         {

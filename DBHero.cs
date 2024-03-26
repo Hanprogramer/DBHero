@@ -4,6 +4,7 @@ using Godot;
 [Tool]
 public partial class DBHero : EditorPlugin
 {
+    public const string DBH_VERSION = "0.1-beta";
     PackedScene EditorScene = GD.Load<PackedScene>("res://addons/DBHero/src/scenes/DBHeroEditor.tscn");
     Control Editor;
 
@@ -17,13 +18,14 @@ public partial class DBHero : EditorPlugin
 
         AddImportPlugin(new DBHeroImporter());
         ResourceLoader.AddResourceFormatLoader(new DBHLoader(), true);
-        //ResourceLoader.(new DBHLoader());
 
+        CallDeferred(MethodName.AddAutoloadSingleton,"DBHero", "res://addons/DBHero/DBHAutoload.cs");
     }
 
     public override void _ExitTree()
     {
         Editor?.QueueFree();
+        RemoveAutoloadSingleton("DBHero");
     }
 
     public override Texture2D _GetPluginIcon()
@@ -46,5 +48,6 @@ public partial class DBHero : EditorPlugin
         if (Editor != null)
             Editor.Visible = visible;
     }
+
 }
 #endif

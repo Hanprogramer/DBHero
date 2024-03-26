@@ -1,0 +1,120 @@
+[gd_scene load_steps=2 format=3 uid="uid://0dice8mpolik"]
+
+[ext_resource type="Script" path="res://addons/DBHero/src/Scenes/DBHCreateDialog.gd" id="1_r56r0"]
+
+[node name="DBHCreateDialog" type="Window" node_paths=PackedStringArray("le_dbname", "le_namespacename", "le_classname")]
+title = "Create new database"
+initial_position = 2
+size = Vector2i(500, 550)
+exclusive = true
+script = ExtResource("1_r56r0")
+le_dbname = NodePath("PanelContainer/MarginContainer/VBoxContainer/DBName/LineEdit")
+le_namespacename = NodePath("PanelContainer/MarginContainer/VBoxContainer/NamespaceName/LineEdit")
+le_classname = NodePath("PanelContainer/MarginContainer/VBoxContainer/ClassName/LineEdit")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DBName" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/DBName"]
+layout_mode = 2
+text = "Database Name:"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/DBName"]
+layout_mode = 2
+tooltip_text = "Database name for the file"
+placeholder_text = "\"Items\", \"Pets\", etc."
+
+[node name="AddDefaults" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/AddDefaults"]
+layout_mode = 2
+text = "Add default fields"
+
+[node name="CBDefaultFields" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/AddDefaults"]
+layout_mode = 2
+tooltip_text = "Add default fields like \"id\" and \"class\". ID numerical number starts from 0. Class is the name of the class when generating source."
+button_pressed = true
+text = "Enabled"
+
+[node name="GenClass" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/GenClass"]
+layout_mode = 2
+text = "Generate Class?"
+
+[node name="CBGenClass" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/GenClass"]
+layout_mode = 2
+tooltip_text = "Generate a source file to be used in the engine. Currently only supports C#"
+text = "Enabled"
+
+[node name="NamespaceName" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/NamespaceName"]
+layout_mode = 2
+text = "Namespace (optional):"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/NamespaceName"]
+layout_mode = 2
+tooltip_text = "Namespace to be used if class is generated"
+placeholder_text = "MyGame"
+editable = false
+
+[node name="ClassName" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/ClassName"]
+layout_mode = 2
+text = "Class Name:"
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/ClassName"]
+layout_mode = 2
+tooltip_text = "Name for the generated class source"
+placeholder_text = "\"Item\", \"Block\", etc."
+editable = false
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MainButtons" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="BtnCreate" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/MainButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Create"
+
+[node name="BtnCancel" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/MainButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/AddDefaults/CBDefaultFields" to="." method="_on_cb_default_fields_toggled"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/GenClass/CBGenClass" to="." method="_on_cb_gen_class_toggled"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/MainButtons/BtnCreate" to="." method="_on_btn_create_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/MainButtons/BtnCancel" to="." method="_on_btn_cancel_pressed"]
