@@ -75,8 +75,8 @@ public partial class DBHEntry : GodotObject
     }
 }
 
-[Icon("res://icon.svg")]
 [GlobalClass]
+[Icon("res://addons/DBHero/dbhero.svg")]
 public partial class DBHDatabase : Resource
 {
     [Export]

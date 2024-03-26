@@ -1,7 +1,8 @@
 ﻿using Godot;
 
 [Tool]
-public partial class DBHAutoload : Node
+[GlobalClass]
+public partial class DBHAutoload : GodotObject
 {
     public static void CreateNewDB(string path, string dbName, string namespacename, bool gen_class, string class_name, bool add_default_fields)
     {

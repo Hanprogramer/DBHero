@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://cie38fxgf20w"]
+[gd_scene load_steps=9 format=3 uid="uid://cie38fxgf20w"]
 
 [ext_resource type="Script" path="res://addons/DBHero/src/Scenes/DBHeroEditor.gd" id="1_b33w5"]
+[ext_resource type="Texture2D" uid="uid://17fdiw5vqfhc" path="res://addons/DBHero/dbhero.svg" id="2_hplf3"]
 [ext_resource type="Script" path="res://addons/DBHero/src/Scenes/StructureControl.cs" id="3_8k8x3"]
 [ext_resource type="PackedScene" uid="uid://dav55ts6d2hhw" path="res://addons/DBHero/src/UI/Table.tscn" id="3_y87eh"]
 [ext_resource type="Script" path="res://addons/DBHero/src/Scenes/EntryController.cs" id="4_ligyx"]
@@ -15,6 +16,7 @@ extends ItemList
 
 @onready var files : Array = []
 @export var label : Label
+var db_icon = preload(\"res://addons/DBHero/dbhero.svg\")
 
 signal on_selected(db: String)
 
@@ -39,6 +41,7 @@ func update_display():
 			\"item_id\" : item,
 			\"db\" : filepath
 		})
+		set_item_icon(item, db_icon)
 		f[\"item_id\"] = item
 
 func _can_drop_data(at_position, data):
@@ -149,7 +152,9 @@ layout_mode = 2
 size_flags_vertical = 3
 item_count = 2
 item_0/text = "Blocks.dbhero"
+item_0/icon = ExtResource("2_hplf3")
 item_1/text = "Items.dbhero"
+item_1/icon = ExtResource("2_hplf3")
 script = SubResource("GDScript_02ohj")
 label = NodePath("../../Label")
 
