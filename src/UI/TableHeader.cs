@@ -24,18 +24,26 @@ public partial class TableHeader : GodotObject
 
     public int GetMinWidthFor(Control control)
     {
-        int maxWidth = (int)control.Size.X;
-        if (control is Label label)
+        try
         {
-            // If label then calculate the size of the text
-            maxWidth = Math.Max(maxWidth, (int)label.GetThemeDefaultFont().GetStringSize(label.Text).X);
-        }
-        foreach (var controlChild in control.GetChildren())
-        {
-            if (controlChild is Control cControlChild) {
-                maxWidth = Math.Max(maxWidth, GetMinWidthFor(cControlChild));
+            int maxWidth = (int)control.Size.X;
+            if (control is Label label)
+            {
+                // If label then calculate the size of the text
+                maxWidth = Math.Max(maxWidth, (int)label.GetThemeDefaultFont().GetStringSize(label.Text).X);
             }
+            foreach (var controlChild in control.GetChildren())
+            {
+                if (controlChild is Control cControlChild)
+                {
+                    maxWidth = Math.Max(maxWidth, GetMinWidthFor(cControlChild));
+                }
+            }
+            return maxWidth;
         }
-        return maxWidth;
+        catch (Exception)
+        {
+            return 0;
+        }
     }
 }

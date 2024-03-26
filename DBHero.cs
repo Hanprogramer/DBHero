@@ -15,7 +15,8 @@ public partial class DBHero : EditorPlugin
         Editor.Visible = false;
 
         AddCustomType("DBHDatabase", "Resource", GD.Load<CSharpScript>("res://addons/DBHero/src/Scripts/DBHDatabase.cs"), GD.Load<Texture2D>("res://icon.svg"));
-
+        AddCustomType("EditorIconTexture", "ImageTexture", GD.Load<GDScript>("res://addons/DBHero/src/Util/editor_icon_texture.gd"), null);
+        
         AddImportPlugin(new DBHeroImporter());
         ResourceLoader.AddResourceFormatLoader(new DBHLoader(), true);
 
